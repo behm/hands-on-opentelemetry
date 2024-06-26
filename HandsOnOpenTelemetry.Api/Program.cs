@@ -1,5 +1,6 @@
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,11 +10,20 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService("dotnet-frontend"))
+    //.ConfigureResource(resource => resource.AddService("dotnet-frontend"))
+    .ConfigureResource(resourceBuilder => 
+        resourceBuilder
+            .AddService("dotnet-frontend")
+            .AddAttributes(new List<KeyValuePair<string, object>>
+            {
+                new("deployment-environment", "myLaptop")
+            })
+    )
     .WithTracing(tpb =>
         tpb
             .AddAspNetCoreInstrumentation()
-            .AddConsoleExporter());
+            .AddConsoleExporter())
+    ;
 
 var app = builder.Build();
 
@@ -33,6 +43,9 @@ var summaries = new[]
 
 app.MapGet("/hello", (string firstName, string lastName) =>
 {
+    Activity.Current?.SetTag("FirstName", lastName);
+    Activity.Current?.SetTag("Surname", lastName);
+
     return $"Hello, {firstName}!";
 });
 
