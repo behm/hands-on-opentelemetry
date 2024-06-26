@@ -22,7 +22,8 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tpb =>
         tpb
             .AddAspNetCoreInstrumentation()
-            .AddConsoleExporter())
+            .AddConsoleExporter()
+            .AddOtlpExporter())
     ;
 
 var app = builder.Build();
