@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System.Diagnostics;
@@ -22,8 +24,11 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tpb =>
         tpb
             .AddAspNetCoreInstrumentation()
-            .AddConsoleExporter())
+            .AddConsoleExporter()
+            .AddOtlpExporter())
     ;
+
+builder.Logging.AddOpenTelemetry(options => options.AddOtlpExporter());
 
 var app = builder.Build();
 
@@ -41,8 +46,10 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-app.MapGet("/hello", (string firstName, string lastName) =>
+app.MapGet("/hello", (string firstName, string lastName, [FromServices] ILogger logger) =>
 {
+    logger.LogInformation("logging hello: firstName={firstName} lastName={lastName}", firstName, lastName);
+
     Activity.Current?.SetTag("FirstName", lastName);
     Activity.Current?.SetTag("Surname", lastName);
 
